@@ -1,0 +1,6 @@
+@ED_LibraryAPI_HostAddress = http://localhost:5106
+
+GET {{ED_LibraryAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
