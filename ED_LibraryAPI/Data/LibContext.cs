@@ -5,9 +5,9 @@ namespace ED_LibraryAPI.Data
 {
     public class LibContext: DbContext
     {
-        DbSet<Author> Authors { get; set; }
-        DbSet<Book> Books { get; set; }
-        DbSet<Member>  Members { get; set; }
+        public DbSet<Author> Authors { get; set; }
+        public DbSet<Book> Books { get; set; }
+        public DbSet<Member>  Members { get; set; }
 
         public LibContext(DbContextOptions<LibContext> options) : base(options) { }
 
