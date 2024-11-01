@@ -4,6 +4,7 @@ using ED_LibraryAPI.Data;
 using ED_LibraryAPI.Domain;
 using Microsoft.AspNetCore.Http.Json;
 using System.Text.Json.Serialization;
+using ED_LibraryAPI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +23,7 @@ builder.Services
 //    options.SerializerOptions.ReferenceHandler = ReferenceHandler.Preserve);
 //builder.Services.Configure<JsonOptions>(options =>
 //    options.SerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
+builder.Services.AddScoped<IBookService, BookService>();
 
 var app = builder.Build();
 

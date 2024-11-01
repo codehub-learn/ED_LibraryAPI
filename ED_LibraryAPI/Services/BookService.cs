@@ -1,6 +1,8 @@
-﻿using ED_LibraryAPI.Data;
+﻿using Azure;
+using ED_LibraryAPI.Data;
 using ED_LibraryAPI.Domain;
 using ED_LibraryAPI.DTO;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
@@ -15,8 +17,9 @@ namespace ED_LibraryAPI.Services
             _context = context;
         }
 
-        public async Task<BookDTO> AddBook(BookDTO bookDTO)
+        public async Task<BookDTO?> AddBook(BookDTO bookDTO)
         {
+            if (bookDTO.Author == null) return null;
             Author? bookAuthor = await _context.Authors.Where(a => a.Id == bookDTO.Author.Id).SingleOrDefaultAsync();
             if (bookAuthor == null) return null;
 
@@ -45,10 +48,12 @@ namespace ED_LibraryAPI.Services
 
         public async Task<List<BookDTO>> GetAllBooks()
         {
-            return await _context.Books.Select(b => b.ConvertBook()).ToListAsync();
+            return await _context.Books
+                .Include(b => b.Author)
+                .Select(b => b.ConvertBook()).ToListAsync();
         }
 
-        public async Task<BookDTO>? GetBook(int id)
+        public async Task<BookDTO?> GetBook(int id)
         {
              Book? book = await _context.Books
                 .Include(b => b.Author)
@@ -72,11 +77,12 @@ namespace ED_LibraryAPI.Services
             //};
         }
 
-        public async Task<BookDTO> Replace(int bookId, BookDTO bookDTO)
+        public async Task<BookDTO?> Replace(int bookId, BookDTO bookDTO)
         {
             if (bookDTO.Author == null) return null;
 
             Book? book = await _context.Books
+                .Include(b => b.Author)
                 .Where(b => b.Id == bookId).SingleOrDefaultAsync();
             if (book is null) return null;
 
@@ -93,31 +99,36 @@ namespace ED_LibraryAPI.Services
 
         }
 
-        public async Task<List<BookDTO>> Search
-            (string? name, string? publisher, string? authorFirst, string? authorLast)
+        public async Task<List<BookDTO>?> Search
+            ([FromQuery] string? name, [FromQuery] string? publisher, [FromQuery] string? authorFirst, [FromQuery] string? authorLast)
         {
-            var results = _context.Books.Include(b => b.Author); //DONT add ToList, so it is not executed
+            var results = _context.Books.Include(a => a.Author).Select(b => b); //DONT add ToList, so it is not executed
 
-            if (name is not null)
-                results.Where(b => b.Name.ToLower().Contains(name.ToLower()));
+            if (name != null)
+                results = results.Where(b => b.Name.ToLower().Contains(name.ToLower()));
 
-            if (publisher is not null)
-                results.Where (b => b.Publisher.ToLower().Contains(publisher.ToLower()));
+            if (publisher != null)
+                results = results.Where(b => b.Publisher == publisher);
 
-            if (authorFirst is not null)
-                results.Where(b => b.Author.FirstName.ToLower().Contains(authorFirst.ToLower()));
+            if (authorFirst != null)
+                results = results.Where(b => b.Author.FirstName.ToLower().Contains(authorFirst.ToLower()));
             
-            if (authorLast is not null)
-                results.Where(b => b.Author.LastName.ToLower().Contains(authorLast.ToLower()));
+            if (authorLast != null)
+                results = results.Where(b => b.Author.LastName.ToLower().Contains(authorLast.ToLower()));
 
             var resultsList = await results.ToListAsync(); //Execution of query
             if (resultsList is null) return null;
 
-            return resultsList.Select(b => b.ConvertBook()).ToList();
-       
+            List<BookDTO> response = new();
+            foreach (var b in resultsList)
+            {
+                response.Add(b.ConvertBook());
+            }
+
+            return response;
         }
 
-        public async Task<BookDTO> UpdateBook(int bookId, BookDTO dto)
+        public async Task<BookDTO?> UpdateBook(int bookId, BookDTO dto)
         {
             Book? book = await _context.Books.Include(b => b.Author).Where(b => b.Id == bookId)
                 .SingleOrDefaultAsync();
