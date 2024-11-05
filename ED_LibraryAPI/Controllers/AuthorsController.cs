@@ -15,7 +15,7 @@ namespace ED_LibraryAPI.Controllers
             _service = service;
         }
 
-        [HttpGet]
+        [HttpGet] //api/authors
         public async Task<ActionResult<List<AuthorDTO>>> Get()
         {
             var response = await _service.GetAllAuthors();
@@ -34,7 +34,7 @@ namespace ED_LibraryAPI.Controllers
         {
             var response = await _service.GetAuthorById(id);
 
-            if (response == null) return BadRequest();
+            if (response == null) return NotFound();
             return Ok(response);
         }
 
@@ -43,7 +43,7 @@ namespace ED_LibraryAPI.Controllers
         {
             var response = await _service.GetAuthorWithBooksById(id);
 
-            if (response == null) return BadRequest();
+            if (response == null) return NotFound();
             return Ok(response);
         }
 
@@ -104,13 +104,13 @@ namespace ED_LibraryAPI.Controllers
             }
         }
 
-        [HttpDelete, Route("{id}")]
+        [HttpDelete, Route("{id}")] //api/authors/1
         public async Task<ActionResult<bool>> Delete([FromRoute] int id)
         {
-            var response = await _service.DeleteAuthor(id);
+            bool response = await _service.DeleteAuthor(id);
 
             if (response) return Ok(response);
-            else return BadRequest(response);
+            else return NotFound(response);
         }
 
     }

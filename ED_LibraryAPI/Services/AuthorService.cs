@@ -47,7 +47,9 @@ namespace ED_LibraryAPI.Services
 
         public async Task<List<AuthorDTO>> GetAllAuthors()
         {
-            return await _libContext.Authors.Select(a => a.ConvertAuthor()).ToListAsync();
+            return await _libContext.Authors
+                .Select(a => a.ConvertAuthor())
+                .ToListAsync();
         }
 
         public async Task<List<AuthorWithBooksDTO>> GetAllAuthorsWithBooks()
@@ -95,10 +97,10 @@ namespace ED_LibraryAPI.Services
 
         public async Task<List<AuthorDTO>> SearchAuthor(string? firstName, string? lastName)
         {
-            IQueryable<Author> search = _libContext.Authors;
+            IQueryable<Author> search = _libContext.Authors; //SELECT * FROM Authors
             
-            if (firstName is not null) search = search.Where(a => a.FirstName == firstName);
-            if (lastName is not null) search = search.Where(l => l.LastName == lastName);
+            if (firstName is not null) search = search.Where(a => a.FirstName == firstName); //If a firstname is given += WHERE FirstName = FirstName
+            if (lastName is not null) search = search.Where(l => l.LastName == lastName); //If a lastname is given += WHERE LastName = LastName
 
             return await search
                 .Select(a => a.ConvertAuthor())
@@ -107,22 +109,33 @@ namespace ED_LibraryAPI.Services
 
         public async Task<AuthorDTO> UpdateAuthor(AuthorDTO dto)
         {
+            //Check whether first name and last name are nulls and save matching bools
             bool firstNameNull = (dto.FirstName == null) ? true : false;
             bool lastNameNull = (dto.LastName == null) ? true : false;
 
-            if (!firstNameNull && !lastNameNull) throw new BadRequestException
+            //If both first name and last name are null, there is nothing update so we return an exception
+            if (firstNameNull && lastNameNull) throw new BadRequestException
                     ("Bad Request: Either the author first name or last name must be specified");
 
+           //If we have something to update, we search for the author with the matching id in the database
             var author = await _libContext.Authors.FindAsync(dto.Id);
 
+            //If we cannot find an author with the given id in the database we can't update so we return an exception
             if (author == null)
                 throw new NotFoundException("Not Found: The author with the given id was not found!");
 
+            //If an updated exists for firstname we perform the update
             if (!firstNameNull)
                 author.FirstName = dto.FirstName!;
+
+            //If an updated exists for lastname we perform the update
             if (!lastNameNull)
                 author.LastName = dto.LastName!;
 
+            //Save changes to the database
+            _libContext.SaveChanges();
+
+            //Return the new item status
             return author.ConvertAuthor();
         }
     }

@@ -35,10 +35,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+app.UseHttpsRedirection(); //Redirects HTTP to HTTPS
 
-app.UseAuthorization();
+app.UseAuthorization(); //Identity 
 
-app.MapControllers();
+app.MapControllers(); //Search for controller with matching URL
 
 app.Run();
