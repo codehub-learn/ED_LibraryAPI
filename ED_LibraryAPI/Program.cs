@@ -24,6 +24,7 @@ builder.Services
 //builder.Services.Configure<JsonOptions>(options =>
 //    options.SerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
 builder.Services.AddScoped<IBookService, BookService>();
+builder.Services.AddScoped<IAuthorService, AuthorService>();
 
 var app = builder.Build();
 

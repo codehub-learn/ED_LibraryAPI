@@ -52,22 +52,28 @@ namespace ED_LibraryAPI.Services
 
         public async Task<List<AuthorWithBooksDTO>> GetAllAuthorsWithBooks()
         {
-            return await _libContext.Authors.Select(a => a.ConvertAuthorWithBooks()).ToListAsync();
+            return await _libContext.Authors
+                .Include(a => a.Books)
+                .Select(a => a.ConvertAuthorWithBooks())
+                .ToListAsync();
         }
 
         public async Task<AuthorDTO?> GetAuthorById(int id)
         {
             return await _libContext.Authors
+                .Where(a => a.Id == id)
                 .Select(a => a.ConvertAuthor())
-                .SingleOrDefaultAsync(a => a.Id == id);
-     
+                .SingleOrDefaultAsync();
         }
 
         public async Task<AuthorWithBooksDTO?> GetAuthorWithBooksById(int id)
         {
             return await _libContext.Authors
-                .Select(a => a.ConvertAuthorWithBooks())
-                .SingleOrDefaultAsync (a => a.Id == id);
+                //.Include(a => a.Books.Where(b => b.Name == "The Name of the Rose"))
+                .Include(a => a.Books)
+                .Where(a => a.Id == id)
+                .Select(a => a.ConvertAuthorWithBooks()) //foreach author a in authors list.add(a.Convert())
+                .SingleOrDefaultAsync();
         }
 
         public async Task<AuthorDTO> ReplaceAuthor(AuthorDTO dto)
@@ -87,7 +93,7 @@ namespace ED_LibraryAPI.Services
             return author.ConvertAuthor();
         }
 
-        public async Task<List<AuthorDTO>> SearchAuthor(string firstName, string lastName)
+        public async Task<List<AuthorDTO>> SearchAuthor(string? firstName, string? lastName)
         {
             IQueryable<Author> search = _libContext.Authors;
             
